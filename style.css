@@ -1,0 +1,12 @@
+#mainCanvas{
+    border : 1px solid black;
+    background-color: #ffb38f;
+}
+
+body{
+    background-color: #ffe2d9;
+}
+
+#lightOn, #lightOff{
+    display : none;
+}
