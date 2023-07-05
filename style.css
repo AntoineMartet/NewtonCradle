@@ -1,3 +1,10 @@
+/**
+ * @file     style.css
+ * @brief    Stylesheet associated to index.html
+ * @author   Created by AntoineM
+ * @version  05.07.2023
+ */
+
 #mainCanvas{
     border : 1px solid black;
     background-color: #ffb38f;
