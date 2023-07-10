@@ -36,8 +36,16 @@ let rightBulbAngleDegree;
 // Variables used to gradually move the coordinates of the end points of the Bezier curves
 // Updated at each time interval
 // Look at drawLeftBulbs() and drawRightBulbs() to see how it is used
-let degreeLeft = 0;
-let degreeRight = 0;
+let degreeLeft = 90;
+let degreeRight = 90;
+
+// Speed of the swinging movement
+const leftSpeed = 1;
+const rightSpeed = 1;
+
+// Boolean to tell if a bulb should be moving or not
+let leftBulbMoving = true;
+let rightBulbMoving = false;
 
 // Coordinates of the 4 points of the left Bezier curve
 const leftBeginPt_X = firstStaticLineX - imgWidth;
@@ -69,9 +77,28 @@ function draw(){
     drawStaticBulbs();
     drawLeftBulb();
     drawRightBulb();
-    // Sets the speed of the motion of the bulbs
-    degreeLeft += 0.5;
-    degreeRight += 0.5;
+
+    degreeLeft += leftSpeed;
+    degreeRight += rightSpeed;
+
+    // Sets the speed of the motion of the left bulb
+    if(degreeLeft >= 180 && degreeLeft < 360){
+        leftBulbMoving = false;
+    }
+    if(degreeLeft >= 360){
+        degreeLeft = 0;
+        leftBulbMoving = true;
+    }
+
+    // Sets the speed of the motion of the right bulb
+    if(degreeRight > 180){
+        rightBulbMoving = true;
+    }
+    if(degreeRight >= 360){
+        degreeRight = 0;
+        rightBulbMoving = false;
+    }
+
 }
 
 // Draws the string and the bulb of each static bulb
@@ -90,8 +117,15 @@ function drawStaticBulbs(){
 // Draws the string and bulb of the left bulb
 function drawLeftBulb(){
     // Update of the coordinates of the left Bezier end point
-    leftEndPt_X = firstStaticLineX - imgWidth - 70*Math.abs(Math.sin(degreeLeft*Math.PI/180));
-    leftEndPt_Y = firstStaticLineY2 - 30 + 30*(1-Math.pow(Math.sin(degreeLeft*Math.PI/180),2));
+    if(leftBulbMoving == true){
+        leftEndPt_X = firstStaticLineX - imgWidth - 70*Math.abs(Math.sin(degreeLeft*Math.PI/180));
+        leftEndPt_Y = firstStaticLineY2 - 30 + 30*(1-Math.pow(Math.sin(degreeLeft*Math.PI/180),2));
+    }
+    else{
+        leftEndPt_X = firstStaticLineX - imgWidth;
+        leftEndPt_Y = firstStaticLineY2;
+    }
+
 
     // Draws the left Bezier curve
     ctx.beginPath();
@@ -104,7 +138,7 @@ function drawLeftBulb(){
     leftBulbAngleDegree = (leftBulbAngle*180/Math.PI).toFixed(0);
 
     // Draws the left bulb
-    drawBulb(leftEndPt_X, leftEndPt_Y, leftBulbAngle);
+    drawBulb(leftEndPt_X, leftEndPt_Y, leftBulbAngle, leftBulbMoving);
 
     // Displays the angle of the left bulb
     data1.innerHTML = "Ampoule gauche radians : " + leftBulbAngle;
@@ -117,8 +151,15 @@ function drawLeftBulb(){
 // Draws the string and bulb of the right bulb
 function drawRightBulb(){
     // Update of the coordinates of the right Bezier end point
-    rightEndPt_X = firstStaticLineX + numberOfStaticBulbs * imgWidth + 70*Math.abs(Math.sin(degreeRight*Math.PI/180));
-    rightEndPt_Y = firstStaticLineY2 - 30 + 30*(1-Math.pow(Math.sin(degreeRight*Math.PI/180),2));
+    if(rightBulbMoving == true){
+        rightEndPt_X = firstStaticLineX + numberOfStaticBulbs * imgWidth + 70*Math.abs(Math.sin(degreeRight*Math.PI/180));
+        rightEndPt_Y = firstStaticLineY2 - 30 + 30*(1-Math.pow(Math.sin(degreeRight*Math.PI/180),2));
+    }
+    else{
+        rightEndPt_X = firstStaticLineX + numberOfStaticBulbs * imgWidth;
+        rightEndPt_Y = firstStaticLineY2;
+    }
+
 
     // Draws the right Bezier curve
     ctx.beginPath();
@@ -131,7 +172,7 @@ function drawRightBulb(){
     rightBulbAngleDegree = (rightBulbAngle*180/Math.PI).toFixed(0);
 
     // Draws the right bulb
-    drawBulb(rightEndPt_X, rightEndPt_Y, rightBulbAngle);
+    drawBulb(rightEndPt_X, rightEndPt_Y, rightBulbAngle, rightBulbMoving);
 
     // Displays the angle of the right bulb
     data3.innerHTML = "Ampoule droite radians : " + rightBulbAngle;
@@ -148,10 +189,16 @@ function getBulbAngle(pt2X, pt2Y, endPtX, endPtY){
 }
 
 // Draws the bulb with the correct angle then reset the working coordinates to their default ones
-function drawBulb(endPtX, endPtY, angleBulb){
+function drawBulb(endPtX, endPtY, angleBulb, isOn){
     ctx.translate(endPtX, endPtY);
     ctx.rotate(angleBulb - Math.PI/2);
-    ctx.drawImage(lightOn, -imgWidth / 2, -imgHeight / 2);
+    if(isOn){
+        ctx.drawImage(lightOn, -imgWidth / 2, -imgHeight / 2);
+    }
+    else{
+        ctx.drawImage(lightOff, -imgWidth / 2, -imgHeight / 2);
+    }
+
     ctx.setTransform(1, 0, 0, 1, 0, 0);
 }
 
