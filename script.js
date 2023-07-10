@@ -2,50 +2,62 @@
  * @file     script.js
  * @brief    Draws an animated Newton's cradle on a 2D canvas
  * @author   Created by AntoineM
- * @version  05.07.2023
+ * @version  10.07.2023
  */
 
-var canvas = document.getElementById("mainCanvas");
-var ctx = canvas.getContext("2d");
-var lightOn = document.getElementById("lightOn");
-var lightOff = document.getElementById("lightOff");
-var data1 = document.getElementById("data1");
-var data2 = document.getElementById("data2");
-var data3 = document.getElementById("data3");
-var data4 = document.getElementById("data4");
+let canvas = document.getElementById("mainCanvas");
+let ctx = canvas.getContext("2d");
+let lightOn = document.getElementById("lightOn");
+let lightOff = document.getElementById("lightOff");
+let data1 = document.getElementById("data1");
+let data2 = document.getElementById("data2");
+let data3 = document.getElementById("data3");
+let data4 = document.getElementById("data4");
 
 // Dimensions of the bulbs images
 const imgWidth = 48;
 const imgHeight = 160;
 
 // Number of static bulbs
-var numberOfBulbs = 5;
+const numberOfStaticBulbs = 5;
 
 // Coordinates of the first static bulb and line
-var firstStaticBulbX = 225;
-var firstStaticLineX = firstStaticBulbX + imgWidth / 2;
-var firstStaticLineY1 = -5;
-var firstStaticLineY2 = 345;
-
-// Beginning point, control points and end point coordinates of a cubic Bezier Curve
-var beginPt_X;
-var beginPt_Y;
-var ctrlPt1_X;
-var ctrlPt1_Y;
-var ctrlPt2_X;
-var ctrlPt2_Y;
-var endPt_X;
-var endPt_Y;
+const firstStaticBulbX = 225;
+const firstStaticLineX = firstStaticBulbX + imgWidth / 2;
+const firstStaticLineY1 = -5;
+const firstStaticLineY2 = 345;
 
 // Angles in radians and degrees of the bulbs
-var angleLeftBulb;
-var angleLeftBulbDegree;
-var angleRightBulb;
-var angleRightBulbDegree;
+let leftBulbAngle;
+let leftBulbAngleDegree;
+let rightBulbAngle;
+let rightBulbAngleDegree;
 
-// Beginning angles of the left and right bulbs
-var degreeLeft = 0;
-var degreeRight = 0;
+// Variables used to gradually move the coordinates of the end points of the Bezier curves
+// Updated at each time interval
+// Look at drawLeftBulbs() and drawRightBulbs() to see how it is used
+let degreeLeft = 0;
+let degreeRight = 0;
+
+// Coordinates of the 4 points of the left Bezier curve
+const leftBeginPt_X = firstStaticLineX - imgWidth;
+const leftBeginPt_Y = -5;
+const leftCtrlPt1_X = firstStaticLineX - imgWidth;
+const leftCtrlPt1_Y = 100;
+const leftCtrlPt2_X = firstStaticLineX - imgWidth;
+const leftCtrlPt2_Y = 280;
+let leftEndPt_X;
+let leftEndPt_Y;
+
+// Coordinates of the 4 points of the right Bezier curve
+const rightBeginPt_X = firstStaticLineX + numberOfStaticBulbs * imgWidth;
+const rightBeginPt_Y = -5;
+const rightCtrlPt1_X = firstStaticLineX + numberOfStaticBulbs * imgWidth;
+const rightCtrlPt1_Y = 100;
+const rightCtrlPt2_X = firstStaticLineX + numberOfStaticBulbs * imgWidth;
+const rightCtrlPt2_Y = 280;
+let rightEndPt_X;
+let rightEndPt_Y;
 
 setInterval(draw, 20);
 
@@ -54,94 +66,93 @@ function draw(){
     //drawGrid();
     ctx.strokeStyle = "grey";
     ctx.lineWidth = 6;
-    drawStaticLines();
     drawStaticBulbs();
-    drawLeftBulbBezier();
-    drawRightBulbBezier();
+    drawLeftBulb();
+    drawRightBulb();
     // Sets the speed of the motion of the bulbs
     degreeLeft += 0.5;
     degreeRight += 0.5;
 }
 
-function drawStaticLines(){
-    for(let i=0; i<numberOfBulbs; i++){
+// Draws the string and the bulb of each static bulb
+function drawStaticBulbs(){
+    for(let i=0; i<numberOfStaticBulbs; i++){
+        // Draws static line
         ctx.beginPath();
         ctx.moveTo(firstStaticLineX + i*imgWidth, firstStaticLineY1);
         ctx.lineTo(firstStaticLineX + i*imgWidth, firstStaticLineY2);
         ctx.stroke();
-    }
-}
-
-function drawStaticBulbs(){
-    for(let i=0; i<numberOfBulbs; i++){
+        // Draws static bulb
         ctx.drawImage(lightOff, firstStaticBulbX + i*imgWidth, firstStaticLineY2 - imgHeight / 2);
     }
 }
 
-function drawLeftBulbBezier(){
-    // Coordinates of the 4 points of the left Bezier curve
-    beginPt_X = firstStaticLineX - imgWidth;
-    beginPt_Y = -5;
-    ctrlPt1_X = firstStaticLineX - imgWidth;
-    ctrlPt1_Y = 100;
-    ctrlPt2_X = firstStaticLineX - imgWidth;
-    ctrlPt2_Y = 280;
-    endPt_X = firstStaticLineX - imgWidth - 80*Math.abs(Math.sin(degreeLeft*Math.PI/180));
-    endPt_Y = firstStaticLineY2 - 30 + 30*(1-Math.pow(Math.sin(degreeLeft*Math.PI/180),2));
+// Draws the string and bulb of the left bulb
+function drawLeftBulb(){
+    // Update of the coordinates of the left Bezier end point
+    leftEndPt_X = firstStaticLineX - imgWidth - 70*Math.abs(Math.sin(degreeLeft*Math.PI/180));
+    leftEndPt_Y = firstStaticLineY2 - 30 + 30*(1-Math.pow(Math.sin(degreeLeft*Math.PI/180),2));
 
     // Draws the left Bezier curve
     ctx.beginPath();
-    ctx.moveTo(beginPt_X, beginPt_Y);
-    ctx.bezierCurveTo(ctrlPt1_X, ctrlPt1_Y, ctrlPt2_X, ctrlPt2_Y, endPt_X, endPt_Y);
+    ctx.moveTo(leftBeginPt_X, leftBeginPt_Y);
+    ctx.bezierCurveTo(leftCtrlPt1_X, leftCtrlPt1_Y, leftCtrlPt2_X, leftCtrlPt2_Y, leftEndPt_X, leftEndPt_Y);
     ctx.stroke();
 
-    // Calculates the angle of the left bulb (which is equal to the angle at the end of the Bezier curve)
-    angleLeftBulb = Math.atan2(endPt_Y-ctrlPt2_Y,endPt_X-ctrlPt2_X).toFixed(2).toString();
-    angleLeftBulbDegree = (Math.atan2(endPt_Y-ctrlPt2_Y,endPt_X-ctrlPt2_X)*180/Math.PI).toFixed(2).toString();
+    // Gets the angle of the left bulb in radians and in degrees
+    leftBulbAngle = getBulbAngle(leftCtrlPt2_X, leftCtrlPt2_Y, leftEndPt_X, leftEndPt_Y);
+    leftBulbAngleDegree = (leftBulbAngle*180/Math.PI).toFixed(0);
 
-    // Draws the left bulb with the correct angle then reset the working coordinates to their default ones
-    ctx.translate(endPt_X, endPt_Y);
-    ctx.rotate(angleLeftBulb - Math.PI/2);
-    ctx.drawImage(lightOn, -imgWidth / 2, -imgHeight / 2);
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    // Draws the left bulb
+    drawBulb(leftEndPt_X, leftEndPt_Y, leftBulbAngle);
 
-    // Displays the angle of the left bulb and the left control points
-    data1.innerHTML = "Ampoule gauche radians : " + angleLeftBulb;
-    data2.innerHTML = "Ampoule gauche degrés : " + angleLeftBulbDegree;
-    displayControlPoints(ctrlPt1_X, ctrlPt1_Y, ctrlPt2_X, ctrlPt2_Y);
+    // Displays the angle of the left bulb
+    data1.innerHTML = "Ampoule gauche radians : " + leftBulbAngle;
+    data2.innerHTML = "Ampoule gauche degrés : " + leftBulbAngleDegree;
+
+    // Draws the left control points
+    displayControlPoints(leftCtrlPt1_X, leftCtrlPt1_Y, leftCtrlPt2_X, leftCtrlPt2_Y);
 }
 
-function drawRightBulbBezier(){
-    // Coordinates of the 4 points of the right Bezier curve
-    beginPt_X = firstStaticLineX + numberOfBulbs * imgWidth;
-    beginPt_Y = -5;
-    ctrlPt1_X = firstStaticLineX + numberOfBulbs * imgWidth;
-    ctrlPt1_Y = 100;
-    ctrlPt2_X = firstStaticLineX + numberOfBulbs * imgWidth;
-    ctrlPt2_Y = 280;
-    endPt_X = firstStaticLineX + numberOfBulbs * imgWidth + 80*Math.abs(Math.sin(degreeRight*Math.PI/180));
-    endPt_Y = firstStaticLineY2 - 30 + 30*(1-Math.pow(Math.sin(degreeRight*Math.PI/180),2));
+// Draws the string and bulb of the right bulb
+function drawRightBulb(){
+    // Update of the coordinates of the right Bezier end point
+    rightEndPt_X = firstStaticLineX + numberOfStaticBulbs * imgWidth + 70*Math.abs(Math.sin(degreeRight*Math.PI/180));
+    rightEndPt_Y = firstStaticLineY2 - 30 + 30*(1-Math.pow(Math.sin(degreeRight*Math.PI/180),2));
 
     // Draws the right Bezier curve
     ctx.beginPath();
-    ctx.moveTo(firstStaticLineX + numberOfBulbs * imgWidth, -5);
-    ctx.bezierCurveTo(ctrlPt1_X, ctrlPt1_Y, ctrlPt2_X, ctrlPt2_Y, endPt_X, endPt_Y);
+    ctx.moveTo(rightBeginPt_X, rightBeginPt_Y);
+    ctx.bezierCurveTo(rightCtrlPt1_X, rightCtrlPt1_Y, rightCtrlPt2_X, rightCtrlPt2_Y, rightEndPt_X, rightEndPt_Y);
     ctx.stroke();
 
-    // Calculates the angle of the right bulb (which is equal to the angle at the end of the Bezier curve)
-    angleRightBulb = Math.atan2(endPt_Y-ctrlPt2_Y,endPt_X-ctrlPt2_X).toFixed(2).toString();
-    angleRightBulbDegree = (Math.atan2(endPt_Y-ctrlPt2_Y,endPt_X-ctrlPt2_X)*180/Math.PI).toFixed(2).toString();
+    // Gets the angle of the right bulb in radians and in degrees
+    rightBulbAngle = getBulbAngle(rightCtrlPt2_X, rightCtrlPt2_Y, rightEndPt_X, rightEndPt_Y);
+    rightBulbAngleDegree = (rightBulbAngle*180/Math.PI).toFixed(0);
 
-    // Draws the right bulb with the correct angle then reset the working coordinates to their default ones
-    ctx.translate(endPt_X, endPt_Y);
-    ctx.rotate(angleRightBulb - Math.PI/2);
+    // Draws the right bulb
+    drawBulb(rightEndPt_X, rightEndPt_Y, rightBulbAngle);
+
+    // Displays the angle of the right bulb
+    data3.innerHTML = "Ampoule droite radians : " + rightBulbAngle;
+    data4.innerHTML = "Ampoule droite degrés : " + rightBulbAngleDegree;
+
+    // Draws the right control points
+    displayControlPoints(rightCtrlPt1_X, rightCtrlPt1_Y, rightCtrlPt2_X, rightCtrlPt2_Y);
+}
+
+// Returns the angle of the bulb (which is equal to the angle at the end of the Bezier curve)
+function getBulbAngle(pt2X, pt2Y, endPtX, endPtY){
+    let angleBulb = Math.atan2(endPtY-pt2Y,endPtX-pt2X).toFixed(2);
+    return angleBulb;
+}
+
+// Draws the bulb with the correct angle then reset the working coordinates to their default ones
+function drawBulb(endPtX, endPtY, angleBulb){
+    ctx.translate(endPtX, endPtY);
+    ctx.rotate(angleBulb - Math.PI/2);
     ctx.drawImage(lightOn, -imgWidth / 2, -imgHeight / 2);
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-
-    // Displays the angle of the right bulb and the right control points
-    data3.innerHTML = "Ampoule droite radians : " + angleRightBulb;
-    data4.innerHTML = "Ampoule droite degrés : " + angleRightBulbDegree;
-    displayControlPoints(ctrlPt1_X, ctrlPt1_Y, ctrlPt2_X, ctrlPt2_Y);
 }
 
 // Displays the two control points of a cubic Bezier curve
