@@ -19,7 +19,7 @@ const imgWidth = 48;
 const imgHeight = 160;
 
 // Number of static bulbs
-const numberOfStaticBulbs = 5;
+const numberOfStaticBulbs = 10;
 
 // Coordinates of the first static bulb and line
 const firstStaticBulbX = 225;
@@ -40,13 +40,19 @@ let degreeLeft = 90;
 let degreeRight = 0;
 
 // Speed of the swinging movement
-const leftSpeed = 8;
-const rightSpeed = 8;
+const leftSpeed = 4;
+const rightSpeed = 4;
 
-// Boolean to tell if a bulb should be moving or not
+// Duration of the transition in ms
+const transitionDuration = 400;
+let transitionClock = 0;
+let onStaticBulbIndex = 0;
+
+// Booleans to tell where we are in the animation
 let leftBulbStage = true;
 let rightBulbStage = false;
 let transitionStage = false;
+let transitionToRight = true;
 
 // Coordinates of the 4 points of the left Bezier curve
 const leftBeginPt_X = firstStaticLineX - imgWidth;
@@ -68,14 +74,15 @@ const rightCtrlPt2_Y = 280;
 let rightEndPt_X;
 let rightEndPt_Y;
 
-setInterval(draw, 20);
+let timeInterval = 20;
+setInterval(draw, timeInterval);
 
 function draw(){
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    //drawGrid();
     ctx.strokeStyle = "grey";
     ctx.lineWidth = 6;
-    drawStaticBulbs();
+
+    drawStaticBulbs(onStaticBulbIndex);
     drawLeftBulb();
     drawRightBulb();
 
@@ -83,28 +90,47 @@ function draw(){
         degreeLeft += leftSpeed;
         if(degreeLeft >= 180){
             leftBulbStage = false;
-            rightBulbStage = true;
+            transitionStage = true;
             degreeLeft = 0;
         }
     }
 
-    if(transitionStage){
-
+    if(transitionStage && transitionToRight){
+        if(transitionClock >= (transitionDuration / numberOfStaticBulbs) * (onStaticBulbIndex + 1)){
+            onStaticBulbIndex += 1;
+        }
+        transitionClock += timeInterval;
+        if(transitionClock >= transitionDuration){
+            transitionStage = false;
+            transitionToRight = false;
+            rightBulbStage = true;
+            transitionClock = transitionDuration;
+        }
+    }else if(transitionStage && !transitionToRight){
+        if(transitionClock <= (transitionDuration / numberOfStaticBulbs) * (onStaticBulbIndex)){
+            onStaticBulbIndex -= 1;
+        }
+        transitionClock -= timeInterval;
+        if(transitionClock <= 0){
+            transitionStage = false;
+            transitionToRight = true;
+            leftBulbStage = true;
+            transitionClock = 0;
+        }
     }
 
     if(rightBulbStage){
         degreeRight += rightSpeed;
         if(degreeRight >= 180){
             rightBulbStage = false;
-            leftBulbStage = true;
+            transitionStage = true;
             degreeRight = 0;
         }
     }
-
 }
 
 // Draws the string and the bulb of each static bulb
-function drawStaticBulbs(){
+function drawStaticBulbs(onIndex){
     for(let i=0; i<numberOfStaticBulbs; i++){
         // Draws static line
         ctx.beginPath();
@@ -112,7 +138,11 @@ function drawStaticBulbs(){
         ctx.lineTo(firstStaticLineX + i*imgWidth, firstStaticLineY2);
         ctx.stroke();
         // Draws static bulb
-        ctx.drawImage(lightOff, firstStaticBulbX + i*imgWidth, firstStaticLineY2 - imgHeight / 2);
+        if(i == onIndex && transitionStage){
+            ctx.drawImage(lightOn, firstStaticBulbX + i*imgWidth, firstStaticLineY2 - imgHeight / 2);
+        }else{
+            ctx.drawImage(lightOff, firstStaticBulbX + i*imgWidth, firstStaticLineY2 - imgHeight / 2);
+        }
     }
 }
 
@@ -122,8 +152,7 @@ function drawLeftBulb(){
     if(leftBulbStage == true){
         leftEndPt_X = firstStaticLineX - imgWidth - 70*Math.abs(Math.sin(degreeLeft*Math.PI/180));
         leftEndPt_Y = firstStaticLineY2 - 30 + 30*(1-Math.pow(Math.sin(degreeLeft*Math.PI/180),2));
-    }
-    else{
+    }else{
         leftEndPt_X = firstStaticLineX - imgWidth;
         leftEndPt_Y = firstStaticLineY2;
     }
@@ -140,13 +169,14 @@ function drawLeftBulb(){
 
     // Draws the left bulb
     drawBulb(leftEndPt_X, leftEndPt_Y, leftBulbAngle, leftBulbStage);
-
+    /*
     // Displays the angle of the left bulb
     data1.innerHTML = "Ampoule gauche radians : " + leftBulbAngle;
     data2.innerHTML = "Ampoule gauche degrés : " + leftBulbAngleDegree;
 
     // Draws the left control points
     displayControlPoints(leftCtrlPt1_X, leftCtrlPt1_Y, leftCtrlPt2_X, leftCtrlPt2_Y);
+    */
 }
 
 // Draws the string and bulb of the right bulb
@@ -155,12 +185,10 @@ function drawRightBulb(){
     if(rightBulbStage == true){
         rightEndPt_X = firstStaticLineX + numberOfStaticBulbs * imgWidth + 70*Math.abs(Math.sin(degreeRight*Math.PI/180));
         rightEndPt_Y = firstStaticLineY2 - 30 + 30*(1-Math.pow(Math.sin(degreeRight*Math.PI/180),2));
-    }
-    else{
+    }else{
         rightEndPt_X = firstStaticLineX + numberOfStaticBulbs * imgWidth;
         rightEndPt_Y = firstStaticLineY2;
     }
-
 
     // Draws the right Bezier curve
     ctx.beginPath();
@@ -174,13 +202,14 @@ function drawRightBulb(){
 
     // Draws the right bulb
     drawBulb(rightEndPt_X, rightEndPt_Y, rightBulbAngle, rightBulbStage);
-
+    /*
     // Displays the angle of the right bulb
     data3.innerHTML = "Ampoule droite radians : " + rightBulbAngle;
     data4.innerHTML = "Ampoule droite degrés : " + rightBulbAngleDegree;
 
     // Draws the right control points
     displayControlPoints(rightCtrlPt1_X, rightCtrlPt1_Y, rightCtrlPt2_X, rightCtrlPt2_Y);
+     */
 }
 
 // Returns the angle of the bulb (which is equal to the angle at the end of the Bezier curve)
@@ -195,8 +224,7 @@ function drawBulb(endPtX, endPtY, angleBulb, isOn){
     ctx.rotate(angleBulb - Math.PI/2);
     if(isOn){
         ctx.drawImage(lightOn, -imgWidth / 2, -imgHeight / 2);
-    }
-    else{
+    }else{
         ctx.drawImage(lightOff, -imgWidth / 2, -imgHeight / 2);
     }
 
