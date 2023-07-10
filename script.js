@@ -37,15 +37,16 @@ let rightBulbAngleDegree;
 // Updated at each time interval
 // Look at drawLeftBulbs() and drawRightBulbs() to see how it is used
 let degreeLeft = 90;
-let degreeRight = 90;
+let degreeRight = 0;
 
 // Speed of the swinging movement
-const leftSpeed = 1;
-const rightSpeed = 1;
+const leftSpeed = 8;
+const rightSpeed = 8;
 
 // Boolean to tell if a bulb should be moving or not
-let leftBulbMoving = true;
-let rightBulbMoving = false;
+let leftBulbStage = true;
+let rightBulbStage = false;
+let transitionStage = false;
 
 // Coordinates of the 4 points of the left Bezier curve
 const leftBeginPt_X = firstStaticLineX - imgWidth;
@@ -78,25 +79,26 @@ function draw(){
     drawLeftBulb();
     drawRightBulb();
 
-    degreeLeft += leftSpeed;
-    degreeRight += rightSpeed;
-
-    // Sets the speed of the motion of the left bulb
-    if(degreeLeft >= 180 && degreeLeft < 360){
-        leftBulbMoving = false;
-    }
-    if(degreeLeft >= 360){
-        degreeLeft = 0;
-        leftBulbMoving = true;
+    if(leftBulbStage){
+        degreeLeft += leftSpeed;
+        if(degreeLeft >= 180){
+            leftBulbStage = false;
+            rightBulbStage = true;
+            degreeLeft = 0;
+        }
     }
 
-    // Sets the speed of the motion of the right bulb
-    if(degreeRight > 180){
-        rightBulbMoving = true;
+    if(transitionStage){
+
     }
-    if(degreeRight >= 360){
-        degreeRight = 0;
-        rightBulbMoving = false;
+
+    if(rightBulbStage){
+        degreeRight += rightSpeed;
+        if(degreeRight >= 180){
+            rightBulbStage = false;
+            leftBulbStage = true;
+            degreeRight = 0;
+        }
     }
 
 }
@@ -117,7 +119,7 @@ function drawStaticBulbs(){
 // Draws the string and bulb of the left bulb
 function drawLeftBulb(){
     // Update of the coordinates of the left Bezier end point
-    if(leftBulbMoving == true){
+    if(leftBulbStage == true){
         leftEndPt_X = firstStaticLineX - imgWidth - 70*Math.abs(Math.sin(degreeLeft*Math.PI/180));
         leftEndPt_Y = firstStaticLineY2 - 30 + 30*(1-Math.pow(Math.sin(degreeLeft*Math.PI/180),2));
     }
@@ -125,7 +127,6 @@ function drawLeftBulb(){
         leftEndPt_X = firstStaticLineX - imgWidth;
         leftEndPt_Y = firstStaticLineY2;
     }
-
 
     // Draws the left Bezier curve
     ctx.beginPath();
@@ -138,7 +139,7 @@ function drawLeftBulb(){
     leftBulbAngleDegree = (leftBulbAngle*180/Math.PI).toFixed(0);
 
     // Draws the left bulb
-    drawBulb(leftEndPt_X, leftEndPt_Y, leftBulbAngle, leftBulbMoving);
+    drawBulb(leftEndPt_X, leftEndPt_Y, leftBulbAngle, leftBulbStage);
 
     // Displays the angle of the left bulb
     data1.innerHTML = "Ampoule gauche radians : " + leftBulbAngle;
@@ -151,7 +152,7 @@ function drawLeftBulb(){
 // Draws the string and bulb of the right bulb
 function drawRightBulb(){
     // Update of the coordinates of the right Bezier end point
-    if(rightBulbMoving == true){
+    if(rightBulbStage == true){
         rightEndPt_X = firstStaticLineX + numberOfStaticBulbs * imgWidth + 70*Math.abs(Math.sin(degreeRight*Math.PI/180));
         rightEndPt_Y = firstStaticLineY2 - 30 + 30*(1-Math.pow(Math.sin(degreeRight*Math.PI/180),2));
     }
@@ -172,7 +173,7 @@ function drawRightBulb(){
     rightBulbAngleDegree = (rightBulbAngle*180/Math.PI).toFixed(0);
 
     // Draws the right bulb
-    drawBulb(rightEndPt_X, rightEndPt_Y, rightBulbAngle, rightBulbMoving);
+    drawBulb(rightEndPt_X, rightEndPt_Y, rightBulbAngle, rightBulbStage);
 
     // Displays the angle of the right bulb
     data3.innerHTML = "Ampoule droite radians : " + rightBulbAngle;
